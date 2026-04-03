@@ -1,0 +1,7 @@
+ccxt
+pandas
+requests
+flask
+numpy
+websockets
+web3

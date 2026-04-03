@@ -1,0 +1,14 @@
+# Sensitive — never commit
+config.py
+backup_from_server.sh
+
+# Logs
+*.log
+__pycache__/
+*.pyc
+
+# Internal agent notes
+CLAUDE.md
+
+# Server backups
+*.json
