@@ -1,0 +1,9 @@
+label,total,is_pnl,oos,dd,grid_profit,cycles,breaks,worst_break,gates
+QR6 40g SPOT policyA,-705,358,-1061,-1334,1097.23,3860,26,-229.7,False/False/False
+QR6 40g SPOT policyB,-665,268,-931,-1182,1306.82,6786,36,-345.8,False/False/False
+QR6 40g FUT policyA,-442,559,-1000,-1277,1402.24,3918,26,-224.84,False/False/False
+QR6 40g FUT policyB,-127,544,-670,-1017,1828.32,6954,36,-338.65,False/False/False
+QR6 60g SPOT policyA,-837,236,-1072,-1376,934.8,8824,26,-243.81,False/False/False
+QR6 60g SPOT policyB,-906,117,-1021,-1288,1012.51,15544,36,-340.42,False/False/False
+QR6 60g FUT policyA,-458,544,-1001,-1283,1406.94,9052,26,-230.78,False/False/False
+QR6 60g FUT policyB,-149,541,-689,-1018,1816.9,16205,36,-330.2,False/False/False
