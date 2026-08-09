@@ -1,0 +1,17 @@
+[Unit]
+Description=PHIL-B parabolic first-pullback LONG (Binance USDT-M live micro)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/trader/scripts
+# DRY by default. Live trading requires the --live flag to be added here explicitly.
+ExecStart=/usr/bin/python3 /opt/trader/scripts/phil_b_trader.py
+# Full-universe daily scan can take several minutes (BRS lesson: 300s was too tight)
+TimeoutStartSec=900
+StandardOutput=append:/opt/trader/logs/phil_b.log
+StandardError=append:/opt/trader/logs/phil_b.log
+
+[Install]
+WantedBy=multi-user.target

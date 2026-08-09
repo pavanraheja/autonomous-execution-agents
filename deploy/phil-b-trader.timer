@@ -1,0 +1,10 @@
+[Unit]
+Description=Run PHIL-B trader hourly at :01 (acts on the 1H bar that just closed)
+
+[Timer]
+OnCalendar=*:01
+Persistent=true
+AccuracySec=15s
+
+[Install]
+WantedBy=timers.target
