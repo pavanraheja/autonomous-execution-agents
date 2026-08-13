@@ -1,17 +1,16 @@
-# Crypto Trading Bots — Systematic Strategies
+# Autonomous Execution Agents
 
-Systematic crypto trading bots running live on Binance USDⓈ-M Futures. Built in Python, deployed on a VPS, monitored via Flask dashboards.
+A multi-strategy execution system for systematic strategies on Binance USDⓈ-M Futures. Python, deployed on a VPS, with per-strategy Flask monitoring.
 
-Built and operated by [Pavan Raheja](https://pavan-blog.vercel.app).
+The point of this repo is the **lifecycle discipline**, not the individual strategies: every candidate runs shadow → paper → live and is measured against criteria it declared *before* seeing results. Most never graduate — 60+ evaluated, 4 promoted, >90% killed by their own test batteries.
+
+Built and operated by [Pavan Raheja](https://pavan.blog).
 
 ---
 
-## Live Dashboards
+## Monitoring
 
-| Strategy | Dashboard | Status |
-|----------|-----------|--------|
-| MFI Coin Hunter | [http://217.15.164.68:8083](http://217.15.164.68:8083) | Live |
-| Liq Zone Trader | [http://217.15.164.68:8089](http://217.15.164.68:8089) | Live |
+Each strategy exposes a Flask dashboard (live P&L, open positions, trade log) on its own port. Production dashboards are **not publicly exposed** — run locally against the paper-mode config to see the interface.
 
 ---
 
