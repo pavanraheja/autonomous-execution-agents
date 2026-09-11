@@ -4,7 +4,7 @@ A multi-strategy execution system for systematic strategies on Binance USDⓈ-M 
 
 The point of this repo is the **lifecycle discipline**, not the individual strategies: every candidate runs shadow → paper → live and is measured against criteria it declared *before* seeing results. Most never graduate — 60+ evaluated, 4 promoted, >90% killed by their own test batteries.
 
-Built and operated by [Pavan Raheja](https://pavan.blog).
+Built and operated by [Pavan Raheja](https://pavan.blog), AI Product Manager in Dubai — **[see my work & get in touch → pavan.blog/work](https://www.pavan.blog/work?utm_source=github&utm_medium=readme&utm_campaign=autonomous-execution-agents)**.
 
 ---
 
