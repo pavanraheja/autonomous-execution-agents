@@ -177,7 +177,9 @@ def _load_binance_capital():
     _sys.path.insert(0, "/opt/trader/scripts")
     try:
         from capital_pool import get_platform
-        bn = get_platform("binance")
+        # 2026-09-28: pool v2 (05-26) split "binance" into named accounts; asking for "binance"
+        # silently fell back to DEFAULTS $600, which disabled the -10% equity drawdown kill.
+        bn = get_platform("binance_alphagrid")
         src = bn.get("_source_path") or "(in-memory)"
         return float(bn["total"]), float(bn["reserve"]), src
     except Exception as _ex:
@@ -405,6 +407,9 @@ def check_risk(strategy, coin, direction, margin):
 # ─────────────────────────────────────────
 # ORDER EXECUTOR
 # ─────────────────────────────────────────
+import time as _time
+ALGO_VERIFY_WAITS = (0.3, 0.5, 0.8, 1.2, 1.5)   # ~4.3s total before giving up
+
 def place_algo_stop(symbol, side, trigger_price, order_type):
     """
     Place a conditional SL/TP via the Binance Algo Order API and VERIFY it exists.
@@ -427,16 +432,43 @@ def place_algo_stop(symbol, side, trigger_price, order_type):
         if not algo_id:
             log.error(f"  ALGO {order_type} no algoId in response: {r}")
             return None
-        # verify it actually rests as NEW
-        q = exchange.fapiPrivateGetAlgoOrder({"algoId": algo_id})
-        status = q.get("algoStatus") or q.get("status")
-        if status in ("NEW", "WORKING"):
-            return algo_id
-        log.error(f"  ALGO {order_type} placed but status={status} (algoId={algo_id})")
-        return None
     except Exception as e:
         log.error(f"  ALGO {order_type} FAILED: {e}")
         return None
+    # Verify it actually rests as NEW. 2026-09-28: Binance registers algo orders
+    # asynchronously — querying ~170ms after placement returns -2013 "Order does not
+    # exist", which made EVERY entry since 07-30 emergency-close. Poll with backoff,
+    # then fall back to the open-algo-orders list, before declaring it missing.
+    for attempt, wait in enumerate(ALGO_VERIFY_WAITS):
+        _time.sleep(wait)
+        try:
+            q = exchange.fapiPrivateGetAlgoOrder({"algoId": algo_id})
+        except Exception as e:
+            if "-2013" in str(e):
+                continue                      # not registered yet — wait and retry
+            log.error(f"  ALGO {order_type} verify error: {e}")
+            continue
+        status = q.get("algoStatus") or q.get("status")
+        if status in ("NEW", "WORKING"):
+            if attempt:
+                log.info(f"  ALGO {order_type} verified on attempt {attempt + 1}")
+            return algo_id
+        log.error(f"  ALGO {order_type} placed but status={status} (algoId={algo_id})")
+        return None
+    try:
+        rows = exchange.fapiPrivateGetOpenAlgoOrders({"symbol": market_id})
+        rows = rows if isinstance(rows, list) else rows.get("orders", [])
+        if any(str(o.get("algoId")) == str(algo_id) for o in rows):
+            log.info(f"  ALGO {order_type} found in openAlgoOrders after query retries")
+            return algo_id
+    except Exception as e:
+        log.error(f"  ALGO {order_type} openAlgoOrders check failed: {e}")
+    log.error(f"  ALGO {order_type} never confirmed (algoId={algo_id}) — cancelling it")
+    try:
+        exchange.fapiPrivateDeleteAlgoOrder({"algoId": algo_id})
+    except Exception:
+        pass
+    return None
 
 
 import time as _t_coid, re as _re_coid
