@@ -66,13 +66,21 @@ def main():
     dry, test = "--dry" in sys.argv, "--test" in sys.argv
     st = load_state(); now = time.time(); ts = datetime.now(timezone.utc)
     try:
-        s = snapshot(); st["fails"] = 0
+        s = snapshot()
+        if st.get("fails", 0) >= 3:   # tell him the blind spot is over, and how long it lasted
+            tg(f"✅ <b>Manual Desk floor alert recovered</b> after {st['fails']} failed checks "
+               f"(~{st['fails'] * 2 / 60:.0f}h blind).", dry)
+        st["fails"] = 0; st.pop("blind_ts", None)
     except Exception as e:
         st["fails"] = st.get("fails", 0) + 1
         print(ts.isoformat(), "snapshot failed:", str(e)[:160])
-        if st["fails"] == 3:   # silent failure is the real danger for an alert
-            tg("⚠️ <b>Manual Desk floor alert is BLIND</b>\n3 checks in a row failed to read Binance.\n"
-               f"Last error: {str(e)[:120]}", dry)
+        # Silent failure is the real danger for an alert. 2026-10-10: a single warning at the
+        # 3rd failure left it blind for 34h unnoticed — now repeat every 6h while blind.
+        if st["fails"] >= 3 and now - st.get("blind_ts", 0) >= 6 * 3600:
+            if tg("⚠️ <b>Manual Desk floor alert is BLIND</b>\n"
+                  f"{st['fails']} checks in a row failed to read Binance (~{st['fails'] * 2 / 60:.1f}h).\n"
+                  f"Last error: {str(e)[:120]}", dry):
+                st["blind_ts"] = now
         if not dry: json.dump(st, open(STATE, "w"))
         return
     eq = s["equity"]
