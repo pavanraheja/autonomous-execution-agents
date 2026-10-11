@@ -91,7 +91,10 @@ def _load_keys():
         if line and not line.startswith("#") and "=" in line:
             k, v = line.split("=", 1); d[k.strip()] = v.strip().strip('"').strip("'")
     if VENUE == "bybit":                       # note: Bybit uses _API_SECRET, Binance uses _SECRET
-        return d.get("BYBIT_API_KEY", ""), d.get("BYBIT_API_SECRET", "")
+        # 2026-10-11: LZ_BYBIT_ACCOUNT=sub → the strategy sub-account (isolated from the manual
+        # book, whose positions left the main account with negative free margin). Default stays main.
+        p = "BYBIT_SUB_API" if os.environ.get("LZ_BYBIT_ACCOUNT", "main").lower() == "sub" else "BYBIT_API"
+        return d.get(p + "_KEY", ""), d.get(p + "_SECRET", "")
     return d.get(ACCOUNT + "_API_KEY", ""), d.get(ACCOUNT + "_SECRET", "")
 
 _ex = None

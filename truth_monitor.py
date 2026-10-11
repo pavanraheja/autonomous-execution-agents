@@ -109,7 +109,8 @@ def stale_bots():
     return out
 
 def margin_status(k):
-    by = ccxt.bybit({"apiKey": k["BYBIT_API_KEY"], "secret": k["BYBIT_API_SECRET"]})
+    # 2026-10-11: all Bybit strategies (mfi_long, XAG, DVOL) trade on the sub-account; main = manual book
+    by = ccxt.bybit({"apiKey": k["BYBIT_SUB_API_KEY"], "secret": k["BYBIT_SUB_API_SECRET"]})
     bn = ccxt.binanceusdm({"apiKey": k["BINANCE_LIVE_API_KEY"], "secret": k["BINANCE_LIVE_SECRET"]})
     b_free = float(by.fetch_balance()["free"].get("USDT") or 0)
     n_avail = float(bn.fetch_balance()["info"]["availableBalance"])
@@ -174,7 +175,7 @@ def main():
     try:
         b_free, n_avail, bn, by = margin_status(k)
         if (b_free < 0 or n_avail < 50) and now - st.get("margin_alert", 0) > 24 * 3600:
-            alerts.append(f"🟠 <b>Strategies margin-starved</b>\nBybit free USDT ${b_free:,.0f} · Binance B available ${n_avail:,.0f}\n"
+            alerts.append(f"🟠 <b>Strategies margin-starved</b>\nBybit strategy sub-account free ${b_free:,.0f} · Binance B available ${n_avail:,.0f}\n"
                           "New strategy entries will fail until margin is freed.")
             st["margin_alert"] = now
         st["fails"] = 0
@@ -205,7 +206,7 @@ def main():
             age_h = (ts - datetime.fromisoformat(last_closed)).total_seconds() / 3600
             flag = " ⚠️ STALE (fills since then are missing from the ledger)" if age_h > LEDGER_STALE_H else ""
             lines.append(f"AlphaGrid ledger last close {last_closed[:10]} ({age_h/24:.0f}d ago){flag}")
-        lines.append(f"Margin: Bybit free ${b_free:,.0f} · Binance B avail ${n_avail:,.0f}")
+        lines.append(f"Margin: Bybit sub free ${b_free:,.0f} · Binance B avail ${n_avail:,.0f}")
         if tg("\n".join(lines), dry):
             st["digest"] = day; st["day"] = {"executed": 0, "rejected": {}, "unverified": 0}
     print(ts.isoformat(), f"alerts={len(alerts)} kill={ks} exec+={len(ev['executed'])} unverified+={len(ev['unverified'])} "
