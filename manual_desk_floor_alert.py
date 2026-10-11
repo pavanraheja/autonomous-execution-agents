@@ -18,10 +18,11 @@ import ccxt
 FLOOR_PCT = 0.40        # close all perps at/below this share of peak equity
 WATCH_PCT = 0.60        # early warning
 DANGER_PCT = 0.48       # act-soon warning
-UNIMMR_DANGER = 3.0     # Binance liquidates < 1.05; its own warnings come too late
+UNIMMR_DANGER = 20.0    # 2026-10-11: was 3 (≈1% before liquidation). At ~2.8x, 20 ≈ a −28% market move,
+                        # i.e. still time to act. Binance liquidates < 1.05; its own warnings come too late.
 TARGET_TOTAL = 200_000  # all Account C wallets + AlphaGrid (Account B)
 STATE = "/opt/trader/state/manual_desk_floor.json"
-REPEAT = {"WATCH": 12 * 3600, "DANGER": 3600, "FLOOR": 900, "MMR": 900}
+REPEAT = {"WATCH": 12 * 3600, "DANGER": 3600, "FLOOR": 900, "MMR": 3600}
 DAILY_UTC_HOUR = 5      # 09:00 Dubai
 
 def env(path):
@@ -109,7 +110,7 @@ def main():
         msg = {"WATCH": "🟡 <b>Manual Desk — WATCH</b> (equity ≤60% of peak)",
                "DANGER": "🟠 <b>Manual Desk — DANGER</b> (equity ≤48% of peak) — floor is close",
                "FLOOR": "🔴 <b>Manual Desk — FLOOR HIT</b>\n<b>Close ALL perps now, keep spot.</b>",
-               "MMR": "🔴 <b>Manual Desk — uniMMR below 3</b>\nLiquidation zone is near. <b>Close perps now.</b>"}[tier]
+               "MMR": f"🔴 <b>Manual Desk — uniMMR below {UNIMMR_DANGER:g}</b>\nLiquidation is getting close (≈ −34% market at current leverage). <b>Cut perps now.</b>"}[tier]
         if tg(msg + "\n" + head + ("\nPerps to close:\n" + perps_txt if tier in ("FLOOR", "MMR") else ""), dry):
             st["tier"], st["tier_ts"] = tier, now
     elif tier is None and last and notional >= 50 and pct > WATCH_PCT + 0.03:
